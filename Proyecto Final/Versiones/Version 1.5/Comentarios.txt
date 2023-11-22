@@ -1,0 +1,3 @@
+Acontinuacion, se agrego processing con una interfaz grafica en forma de reloj
+a tiene como proposito registrar y mostrar la hora para en postreras modificaciones
+guardarla en un archivo para saber en que momentos se abrio la caja fuerte

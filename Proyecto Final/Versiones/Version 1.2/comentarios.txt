@@ -1,0 +1,4 @@
+se modifico el programa para que esta vez añadiera luces leds
+una de color rojo y la otra de color verde,
+de tal manera que cada una prendera si el valor es correcto o incorrecto
+dependiendo de su funcionalidad
