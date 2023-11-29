@@ -1,0 +1,161 @@
+import processing.serial.*;
+import java.util.Calendar;
+import java.util.ArrayList;
+
+Serial puertoSerie;
+//clase .objeto
+
+CajaFuerte cajaFuerte;
+//clase .   objeto
+void setup() {
+  size(1280, 750);
+  String puerto = "COM4"; // Cambia esto al puerto correcto
+  
+  
+    // Inicializar la instancia de la clase puertoSerie
+  puertoSerie = new Serial(this, puerto, 9600);
+  // Inicializar la instancia de la clase CajaFuerte
+  cajaFuerte = new CajaFuerte(width / 2, height / 2);
+}
+
+void draw() {
+  background(200); // Color gris
+
+  // Dibujar la caja fuerte y la puerta
+  cajaFuerte.mostrar();
+
+  // Leer información del puerto serie
+  while (puertoSerie.available() > 0) {
+    String[] datos = split(puertoSerie.readStringUntil('\n'), ',');
+    if (datos.length == 2) {
+      String estadoCaja = datos[0];
+      if (estadoCaja.equals("A")) {
+        cajaFuerte.abrirCaja();
+      } else if (estadoCaja.equals("C")) {
+        cajaFuerte.cerrarCaja();
+      }
+    }
+  }
+
+  // Muestra la cantidad de veces que la caja fue abierta y cerrada
+  fill(80);
+  textSize(18);
+  text("Aperturas: " + cajaFuerte.getContadorAperturas(), 100, 100);
+  text("Cierres: " + cajaFuerte.getContadorCierres(), 100, 150);
+
+  // Muestra el registro completo de aperturas y cierres
+  fill(80);
+  textSize(14);
+  text("Registro:", 100, 200);
+  ArrayList<String> registro = cajaFuerte.getRegistro();
+  for (int i = 0; i < registro.size(); i++) {
+    text(registro.get(i), 100, 230 + i * 20);
+  }
+}
+
+// Clase CajaFuerte
+class CajaFuerte {
+  private float x, y;
+  private boolean abierta;
+  private int contadorAperturas;
+  private int contadorCierres;
+  private ArrayList<String> registro;
+
+  // Elementos para el cartel
+  private String estadoCartel;
+  private int colorCartel;
+
+  // Constructor
+  CajaFuerte(float x, float y) {
+    this.x = x;
+    this.y = y;
+    this.abierta = false;
+    this.contadorAperturas = 0;
+    this.contadorCierres = 0;
+    this.registro = new ArrayList<String>();
+    this.estadoCartel = "Cerrado";
+    this.colorCartel = color(255, 0, 0); // Rojo por defecto
+  }
+
+  // Función para abrir la caja fuerte
+  void abrirCaja() {
+    if (!abierta) {
+      abierta = true;
+      contadorAperturas++;
+      estadoCartel = "Abierto";
+      colorCartel = color(0, 255, 0); // Cambiar a verde cuando está abierto
+      String registroApertura = "Apertura #" + contadorAperturas + ": " + obtenerHoraFechaActual();
+      registro.add(registroApertura);
+      guardarRegistro();
+    }
+  }
+
+  // Función para cerrar la caja fuerte
+  void cerrarCaja() {
+    if (abierta) {
+      abierta = false;
+      contadorCierres++;
+      estadoCartel = "Cerrado";
+      colorCartel = color(255, 0, 0); // Cambiar a rojo cuando está cerrado
+      String registroCierre = "Cierre #" + contadorCierres + ": " + obtenerHoraFechaActual();
+      registro.add(registroCierre);
+      guardarRegistro();
+    }
+  }
+
+  // Función para mostrar la caja fuerte y la puerta
+  void mostrar() {
+    // Dibujar la caja fuerte
+    fill(255, 220, 185); // Color beige
+    rectMode(CENTER);
+    rect(x, y, 200, 150); // Caja fuerte
+
+    // Dibujar la puerta
+    fill(abierta ? 0 : 255, 0, 0); // Color verde si está abierta, rojo si está cerrada
+    rect(x + 90, y, 10, 90); // Puerta
+
+    // Dibujar el cartel en el centro de la caja
+    fill(colorCartel);
+    textSize(16);
+    textAlign(CENTER, CENTER);
+    text(estadoCartel, x, y);
+  }
+
+  // Función para obtener la hora y fecha actual
+  String obtenerHoraFechaActual() {
+    Calendar calendario = Calendar.getInstance();
+    int hora = calendario.get(Calendar.HOUR_OF_DAY);
+    int minuto = calendario.get(Calendar.MINUTE);
+    int segundo = calendario.get(Calendar.SECOND);
+    int dia = calendario.get(Calendar.DAY_OF_MONTH);
+    int mes = calendario.get(Calendar.MONTH) + 1; // Nota: en Java, los meses comienzan desde 0
+    int anio = calendario.get(Calendar.YEAR);
+
+    // Formatear la hora y fecha
+    return nf(hora, 2) + ":" + nf(minuto, 2) + ":" + nf(segundo, 2) + " " + nf(dia, 2) + "/" + nf(mes, 2) + "/" + anio;
+  }
+
+  // Función para guardar el registro completo en un archivo en el escritorio
+  void guardarRegistro() {
+    String[] lineas = new String[registro.size()];
+    for (int i = 0; i < registro.size(); i++) {
+      lineas[i] = registro.get(i);
+    }
+    String rutaEscritorio = System.getProperty("user.home") + "/Desktop/";
+    String nombreArchivo = "registro_caja.txt";
+    saveStrings(rutaEscritorio + nombreArchivo, lineas);
+  }
+
+  // Funciones para obtener la cantidad de aperturas, cierres y el registro
+  int getContadorAperturas() {
+    return contadorAperturas;
+  }
+
+  int getContadorCierres() {
+    return contadorCierres;
+  }
+
+  ArrayList<String> getRegistro() {
+    return registro;
+  }
+}
